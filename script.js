@@ -1,21 +1,11 @@
 // ---------- Utilities ----------
 function rollDie(sides){ return Math.floor(Math.random() * sides) + 1; }
-
 function rollDice(count, sides){
   const rolls = [];
   for(let i=0;i<count;i++) rolls.push( rollDie(sides) );
   const total = rolls.reduce((s,v)=>s+v,0);
   return { total, rolls };
 }
-
-function rollDiceExpr(expr){
-  const m = expr.match(/^(\d+)d(\d+)$/i);
-  if(!m) return { total: null, rolls: null, text: expr };
-  const count = parseInt(m[1],10), sides = parseInt(m[2],10);
-  const res = rollDice(count, sides);
-  return { total: res.total, rolls: res.rolls, text: `${expr} → [${res.rolls.join(", ")}] = ${res.total}` };
-}
-
 function pickRandomUnique(arr, count){
   if(count <= 0) return [];
   const out = [];
@@ -36,7 +26,7 @@ function applyPlaceholders(trait){
     .replace(/\[Attribute\]/g, attributes[rollDie(attributes.length)-1]);
 }
 
-// ---------- Data pools ----------
+// ---------- Data ----------
 const weapons = {
   "Light Melee": [
     {name:"Dagger", note:"Exploding", dmg:"d6"},
@@ -91,177 +81,160 @@ const armorTable = [
   "Raiment (1 armor + 2 energy shield)"
 ];
 
-// ---------- Trait tables ----------
+// ---------- Traits ----------
 const weaponTraits = [
-  "+damage",
-  "+elemental damage",
-  "Elemental",
-  "Improve elemental",
-  "Pierce",
-  "Breach",
-  "+attribute",
-  "Keen"
+  {name:"+damage", desc:"The weapon deals an extra +1 damage. Stacks."},
+  {name:"+elemental damage", desc:"The weapon adds an extra +1 elemental damage. Stacks."},
+  {name:"Elemental", desc:"The weapon damage type changes to elemental."},
+  {name:"Improve elemental", desc:"You deal an extra +1 specific elemental damage. Stacks."},
+  {name:"Pierce", desc:"The weapon ignores 1 armor. Stacks."},
+  {name:"Breach", desc:"You ignore resistance to [element]."},
+  {name:"+attribute", desc:"The weapon increases an Attribute by 1. Stacks."},
+  {name:"Keen", desc:"Roll weapon damage twice and choose the better result."}
 ];
 
 const armorTraits = [
-  "+armor",
-  "Elemental resistance",
-  "Emit light",
-  "Improve elemental",
-  "Reflect",
-  "Save Recovery",
-  "+attribute",
-  "Chaos Resistance"
+  {name:"+armor", desc:"The item grants an extra +1 armor. Stacks."},
+  {name:"Elemental resistance", desc:"The item grants resistance to [element]."},
+  {name:"Emit light", desc:"The item sheds light around you."},
+  {name:"Improve elemental", desc:"You deal an extra +1 specific elemental damage. Stacks."},
+  {name:"Reflect", desc:"Enemies take 1 damage when they hit you. Stacks."},
+  {name:"Save Recovery", desc:"You have an advantage on [Attribute] saves."},
+  {name:"+attribute", desc:"The item increases [Attribute] by 1. Stacks."},
+  {name:"Chaos Resistance", desc:"The item grants resistance to Chaos."}
 ];
 
 const offhandTraits = [
-  "+energy shield",
-  "Elemental resistance",
-  "Emit light",
-  "Improve elemental",
-  "Energy Shield Regen",
-  "Breach",
-  "+attribute",
-  "Attribute Regen"
+  {name:"+energy shield", desc:"The item grants an extra +1 energy shield. Stacks."},
+  {name:"Elemental resistance", desc:"The item grants resistance to [element]."},
+  {name:"Emit light", desc:"The item sheds light around you."},
+  {name:"Improve elemental", desc:"You deal an extra +1 specific elemental damage. Stacks."},
+  {name:"Energy Shield Regen", desc:"You regain 1 energy shield at the start of your turn. Stacks."},
+  {name:"Breach", desc:"You ignore resistance to [element]."},
+  {name:"+attribute", desc:"The item increases [Attribute] by 1. Stacks."},
+  {name:"Attribute Regen", desc:"You regain 1 [Attribute] at the start of every watch."}
 ];
 
 const jewelleryTraits = [
-  "+energy shield",
-  "Elemental resistance",
-  "Emit light",
-  "Improve elemental",
-  "Energy Shield Regen",
-  "Treasure Hunter",
-  "+attribute",
-  "Chaos Resistance"
+  {name:"+energy shield", desc:"The item grants an extra +1 energy shield. Stacks."},
+  {name:"Elemental resistance", desc:"The item grants resistance to [element]."},
+  {name:"Emit light", desc:"The item sheds light around you."},
+  {name:"Improve elemental", desc:"You deal an extra +1 specific elemental damage. Stacks."},
+  {name:"Energy Shield Regen", desc:"You regain 1 energy shield at the start of your turn. Stacks."},
+  {name:"Treasure Hunter", desc:"When rolling for treasure, roll twice."},
+  {name:"+attribute", desc:"The item increases [Attribute] by 1. Stacks."},
+  {name:"Chaos Resistance", desc:"The item grants resistance to Chaos."}
 ];
 
 // ---------- Subtables ----------
-function shieldOutcomeFromRoll(r){ if(r<=3)return "Armor +1"; if(r<=6)return "Armor +1, Block"; if(r===7)return "Armor +1, Energy Shield +1"; return "Armor +1, Energy Shield +1, Block"; }
-function offhandOutcomeFromRoll(r){ if(r<=3)return "Spirit Shield +1"; if(r<=5)return "Spirit Shield +1, +Trait"; if(r<=7)return "Spirit Shield +1, +Socket"; return "Spirit Shield +1, +Trait, +Socket"; }
-function headOutcomeFromRoll(r){ if(r<=2)return "Armor +1"; if(r===3)return "Armor +1, +Trait"; if(r<=5)return "Spirit Shield +1"; if(r===6)return "Spirit Shield +1, +Trait"; return "Armor +1, Spirit Shield +1"; }
-function jewelleryOutcomeFromRoll(r){ return r<=5 ? "Ring" : "Amulet"; }
+function shieldOutcome(r){ if(r<=3)return "Armor +1"; if(r<=6)return "Armor +1, Block"; if(r===7)return "Armor +1, Energy Shield +1"; return "Armor +1, Energy Shield +1, Block"; }
+function offhandOutcome(r){ if(r<=3)return "Spirit Shield +1"; if(r<=5)return "Spirit Shield +1, +Trait"; if(r<=7)return "Spirit Shield +1, +Socket"; return "Spirit Shield +1, +Trait, +Socket"; }
+function headOutcome(r){ if(r<=2)return "Armor +1"; if(r===3)return "Armor +1, +Trait"; if(r<=5)return "Spirit Shield +1"; if(r===6)return "Spirit Shield +1, +Trait"; return "Armor +1, Spirit Shield +1"; }
+function jewelleryType(r){ return r<=5 ? "Ring" : "Amulet"; }
 
-function treasureOutcomeFromRoll(r){
+function treasureOutcome(r){
   switch(r){
-    case 1:{const coins=rollDie(6);return `Trinket + ${coins} coins (1d6 → ${coins})`;}
-    case 2:{const t=rollDie(4),c=rollDie(8);return `${t} trinkets + ${c} coins (1d4 → ${t}, 1d8 → ${c})`;}
-    case 3:{const t=rollDie(6),c=rollDice(2,6);return `${t} trinkets + ${c.total} coins (1d6 → ${t}, 2d6 → [${c.rolls.join(",")}] = ${c.total})`;}
-    case 4:{const t=rollDice(2,4),c=rollDice(2,8);return `${t.total} trinkets (2d4 → [${t.rolls.join(",")}] = ${t.total}) + ${c.total} coins (2d8 → [${c.rolls.join(",")}] = ${c.total})`;}
+    case 1:{const coins=rollDie(6);return `Trinket + ${coins} coins`; }
+    case 2:{const t=rollDie(4),c=rollDie(8);return `${t} trinkets + ${c} coins`; }
+    case 3:{const t=rollDie(6),c=rollDice(2,6); return `${t} trinkets + ${c.total} coins`; }
+    case 4:{const t=rollDice(2,4),c=rollDice(2,8); return `${t.total} trinkets + ${c.total} coins`; }
     case 5:return "Scroll";
     case 6:return "Add socket";
     case 7:return "Reroll trait";
     case 8:return "Improve rarity";
-    default:return "Unknown treasure";
   }
 }
 
 // ---------- Rarity ----------
 function rollRarity(){
   const r=rollDie(8);
-  if(r<=5)return { name:"Common", traits:0, roll:r };
-  if(r<=7)return { name:"Rare", traits:1, roll:r };
-  return { name:"Epic", traits:2, roll:r };
+  if(r<=5) return { name:"Common", traits:0, color:"white" };
+  if(r<=7) return { name:"Rare", traits:1, color:"blue" };
+  return { name:"Epic", traits:2, color:"yellow" };
 }
 
-// ---------- Main Generator ----------
+// ---------- Main Loot Generator ----------
 function generateLoot(){
   const out = [];
   const typeRoll = rollDie(8);
   const typeMap = {1:"Weapon",2:"Shield",3:"Off-hand",4:"Armor",5:"Head",6:"Jewellery",7:"Potion",8:"Treasure"};
-  const type = typeMap[typeRoll] || "Unknown";
-  out.push(`Type roll: ${typeRoll} → ${type}`);
+  const type = typeMap[typeRoll];
+  const rarity = ["Weapon","Shield","Off-hand","Armor","Head","Jewellery"].includes(type) ? rollRarity() : null;
 
-  let rarity=null;
-  if(["Weapon","Shield","Off-hand","Armor","Head","Jewellery"].includes(type)){
-    rarity = rollRarity();
-    out.push(`Rarity roll: ${rarity.roll} → ${rarity.name} (traits: ${rarity.traits})`);
-  }
-
-  let sockets = null;
-  if(["Weapon","Shield","Off-hand","Armor","Head"].includes(type)){
-    sockets = rollDie(3)-1;
-    out.push(`Sockets: ${sockets}`);
-  }
+  let sockets = ["Weapon","Shield","Off-hand","Armor","Head"].includes(type) ? rollDie(3)-1 : 0;
 
   // --- Type-specific ---
+  let itemName="", traits=[], socketCount = sockets;
+
   if(type==="Weapon"){
-    const subtypeRoll=rollDie(6);
     const subtypeMap={1:"Light Melee",2:"Medium Melee",3:"Heavy Melee",4:"Ranged",5:"Thrown",6:"Ammo"};
-    const subtype=subtypeMap[subtypeRoll];
-    out.push(`Weapon subtype roll: ${subtypeRoll} → ${subtype}`);
-    const list = weapons[subtype] || [];
-    const item = list[Math.floor(Math.random()*list.length)];
-    if(item) out.push(`Item: ${item.name} — Damage: ${item.dmg}${item.note?` — ${item.note}`:""}`);
-    if(rarity && rarity.traits>0){
-      const traits = pickRandomUnique(weaponTraits, rarity.traits).map(applyPlaceholders);
-      out.push(`Weapon traits: ${traits.join(", ")}`);
+    const subtype=subtypeMap[rollDie(6)];
+    const item = weapons[subtype][Math.floor(Math.random()*weapons[subtype].length)];
+    itemName = item.name;
+    if(rarity.traits>0){
+      traits = pickRandomUnique(weaponTraits, rarity.traits).map(t=>applyPlaceholders(`${t.name}: ${t.desc}`));
     }
   }
 
-  if(type==="Shield"){ 
-    const r=rollDie(8); 
-    out.push(`Shield roll: ${r} → ${shieldOutcomeFromRoll(r)}`);
-    if(rarity&&rarity.traits>0){
-      const t=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders);
-      out.push(`Shield traits: ${t.join(", ")}`);
-    } 
-  }
-
-  if(type==="Off-hand"){ 
-    const r=rollDie(8); 
-    const text=offhandOutcomeFromRoll(r); 
-    out.push(`Off-hand roll: ${r} → ${text}`); 
-    if(text.includes("+Trait") && rarity&&rarity.traits>0){
-      const t=pickRandomUnique(offhandTraits, rarity.traits).map(applyPlaceholders);
-      out.push(`Off-hand traits: ${t.join(", ")}`);
+  if(type==="Shield"){
+    itemName = shieldOutcome(rollDie(8));
+    if(rarity.traits>0){
+      traits = pickRandomUnique(armorTraits, rarity.traits).map(t=>applyPlaceholders(`${t.name}: ${t.desc}`));
     }
-    if(text.includes("+Socket")) out.push(" - Added: +Socket"); 
   }
 
-  if(type==="Armor"){ 
-    const idx=rollDie(armorTable.length)-1; 
-    out.push(`Armor roll: ${idx+1} → ${armorTable[idx]}`); 
-    if(rarity&&rarity.traits>0){
-      const t=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders);
-      out.push(`Armor traits: ${t.join(", ")}`);
-    } 
+  if(type==="Off-hand"){
+    const text=offhandOutcome(rollDie(8));
+    itemName = text.replace("+Trait","").replace("+Socket","");
+    if(text.includes("+Trait") && rarity.traits>0){
+      traits = pickRandomUnique(offhandTraits, rarity.traits).map(t=>applyPlaceholders(`${t.name}: ${t.desc}`));
+    }
+    if(text.includes("+Socket")) socketCount++;
   }
 
-  if(type==="Head"){ 
-    const r=rollDie(8); 
-    const text=headOutcomeFromRoll(r); 
-    out.push(`Head roll: ${r} → ${text}`); 
-    if(text.includes("+Trait") && rarity&&rarity.traits>0){
-      const t=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders);
-      out.push(`Head traits: ${t.join(", ")}`);
-    } 
+  if(type==="Armor"){
+    itemName = armorTable[rollDie(armorTable.length)-1];
+    if(rarity.traits>0){
+      traits = pickRandomUnique(armorTraits, rarity.traits).map(t=>applyPlaceholders(`${t.name}: ${t.desc}`));
+    }
   }
 
-  if(type==="Jewellery"){ 
-    const r=rollDie(8); 
-    const subtype=jewelleryOutcomeFromRoll(r); 
-    out.push(`Jewellery roll: ${r} → ${subtype}`); 
-    if(rarity&&rarity.traits>0){
-      const t=pickRandomUnique(jewelleryTraits, rarity.traits).map(applyPlaceholders);
-      out.push(`Jewellery traits: ${t.join(", ")}`);
-    } 
+  if(type==="Head"){
+    const text=headOutcome(rollDie(8));
+    itemName = text.replace("+Trait","");
+    if(text.includes("+Trait") && rarity.traits>0){
+      traits = pickRandomUnique(armorTraits, rarity.traits).map(t=>applyPlaceholders(`${t.name}: ${t.desc}`));
+    }
   }
 
-  if(type==="Potion"){ 
-    const simplePotions=["Minor Healing (restores HP)","Minor Mana (restores MP)","Antitoxin (cures poison)","Elixir of Swiftness (+movement)"]; 
-    const p=simplePotions[Math.floor(Math.random()*simplePotions.length)]; 
-    out.push(`Potion: ${p}`); 
+  if(type==="Jewellery"){
+    itemName = jewelleryType(rollDie(8));
+    if(rarity.traits>0){
+      traits = pickRandomUnique(jewelleryTraits, rarity.traits).map(t=>applyPlaceholders(`${t.name}: ${t.desc}`));
+    }
   }
 
-  if(type==="Treasure"){ 
-    const r=rollDie(8); 
-    out.push(`Treasure roll: ${r} → ${treasureOutcomeFromRoll(r)}`); 
+  if(type==="Potion"){
+    const simplePotions=["Minor Healing","Minor Mana","Antitoxin","Elixir of Swiftness"];
+    itemName = simplePotions[Math.floor(Math.random()*simplePotions.length)];
   }
 
-  document.querySelector("#output pre").innerText=out.join("\n");
+  if(type==="Treasure"){
+    itemName = treasureOutcome(rollDie(8));
+  }
+
+  // --- Display ---
+  const socketDisplay = socketCount>0 ? "Sockets: " + "●".repeat(socketCount) : "";
+  const color = rarity ? rarity.color : "white";
+  const traitText = traits.length>0 ? "Traits:\n  - " + traits.join("\n  - ") : "";
+  out.push(`<span style="color:${color}; font-weight:bold">${itemName}</span>`);
+  if(socketDisplay) out.push(socketDisplay);
+  if(traitText) out.push(traitText);
+
+  document.querySelector("#output pre").innerHTML = out.join("\n");
 }
 
+// Event listeners
 document.addEventListener("DOMContentLoaded",()=> {
   document.getElementById("generate-btn").addEventListener("click",generateLoot);
   document.getElementById("clear-btn").addEventListener("click",()=>document.querySelector("#output pre").innerText="");
