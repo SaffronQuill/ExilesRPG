@@ -1,4 +1,4 @@
-// --- Utility dice roller ---
+// --- Utility ---
 function rollDie(sides) {
   return Math.floor(Math.random() * sides) + 1;
 }
@@ -15,15 +15,34 @@ const typeTable = {
   8: "Treasure"
 };
 
-// --- Rarity table ---
-const rarityTable = {
-  1: "Common",
-  2: "Uncommon",
-  3: "Rare",
-  4: "Epic",
-  5: "Legendary",
-  6: "Mythic"
-};
+// --- Rarity (d8 based) ---
+function rollRarity() {
+  const r = rollDie(8);
+  if (r <= 5) return { name: "Common", traits: 0 };
+  if (r <= 7) return { name: "Rare", traits: 1 };
+  return { name: "Epic", traits: 2 };
+}
+
+// --- Example traits pool ---
+const traits = [
+  "Glows faintly in the dark",
+  "Whispers in forgotten tongues",
+  "Lighter than it should be",
+  "Unnaturally sharp",
+  "Warm to the touch",
+  "Etched with runes",
+  "Made of strange metal",
+  "Hungry for blood"
+];
+
+function rollTraits(count) {
+  let results = [];
+  for (let i = 0; i < count; i++) {
+    const trait = traits[rollDie(traits.length) - 1];
+    results.push(trait);
+  }
+  return results;
+}
 
 // --- Weapon subtypes with examples ---
 const weaponSubtypes = {
@@ -82,14 +101,16 @@ const armorTable = [
 function generateLoot() {
   const typeRoll = rollDie(8);
   const type = typeTable[typeRoll];
-
   let result = `Rolled Type (${typeRoll}): ${type}`;
 
-  // Rarity
+  // Rarity & Traits
   if (["Weapon","Shield","Off-hand","Armor","Head","Jewellery"].includes(type)) {
-    const rarityRoll = rollDie(6);
-    const rarity = rarityTable[rarityRoll];
-    result += `\nRarity: ${rarity}`;
+    const rarity = rollRarity();
+    result += `\nRarity: ${rarity.name}`;
+    if (rarity.traits > 0) {
+      const itemTraits = rollTraits(rarity.traits);
+      result += `\nTraits: ${itemTraits.join("; ")}`;
+    }
   }
 
   // Sockets
@@ -98,14 +119,11 @@ function generateLoot() {
     result += `\nSockets: ${sockets}`;
   }
 
-  // Weapon subtype
+  // Weapon subtype + item
   if (type === "Weapon") {
-    const subtypeRoll = rollDie(5); // Light, Medium, Heavy, Ranged, Thrown
     const subtypeNames = ["Light Melee","Medium Melee","Heavy Melee","Ranged","Thrown"];
-    const subtype = subtypeNames[subtypeRoll-1];
-
-    const options = weaponSubtypes[subtype];
-    const item = options[rollDie(options.length)-1];
+    const subtype = subtypeNames[rollDie(subtypeNames.length)-1];
+    const item = weaponSubtypes[subtype][rollDie(weaponSubtypes[subtype].length)-1];
 
     result += `\nSubtype: ${subtype}`;
     result += `\nItem: ${item.name} (Damage: ${item.dmg}${item.note ? ", " + item.note : ""})`;
