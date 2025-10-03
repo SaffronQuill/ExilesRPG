@@ -1,163 +1,137 @@
-// --- Utility functions ---
-function roll(n) {
-  return Math.floor(Math.random() * n) + 1;
+function rollDie(sides) {
+  return Math.floor(Math.random() * sides) + 1;
 }
 
-function rollDice(expr) {
-  const match = expr.match(/(\d+)d(\d+)/);
-  if (!match) return expr;
-  let [ , count, sides ] = match;
-  count = parseInt(count); sides = parseInt(sides);
-  let total = 0, rolls = [];
+function rollDice(count, sides) {
+  let total = 0;
+  let rolls = [];
   for (let i = 0; i < count; i++) {
-    const r = Math.floor(Math.random() * sides) + 1;
-    rolls.push(r); total += r;
+    let r = rollDie(sides);
+    total += r;
+    rolls.push(r);
   }
-  return `${expr} → [${rolls.join(", ")}] = ${total}`;
+  return { total, rolls };
 }
 
-// --- Rarity system ---
-function rollRarity() {
-  const r = roll(8);
-  if (r <= 5) return { rarity: "Common", traits: 0 };
-  if (r <= 7) return { rarity: "Rare", traits: 1 };
-  return { rarity: "Epic", traits: 2 };
-}
-
-// --- Weapon tables ---
-const weaponTables = {
-  lightMelee: [
-    "Dagger (d6, exploding)",
-    "Claw (d6, regain 1 STR)",
-    "Sabre (d6, +1 dmg)",
-    "Hatchet (d6, +1 piercing)",
-    "Club (d6, stun disadvantage)",
-    "Rapier (d6, exploding)"
-  ],
-  mediumMelee: [
-    "Long sword (d6/1h, d8/2h, +1 dmg)",
-    "Spear (d6/1h, d8/2h, reach)",
-    "War hammer (d6/1h, d8/2h, stun disadvantage)",
-    "Mace (d6/1h, d8/2h, +1 dmg adjacent)",
-    "Scepter (d6/1h, d8/2h, +1 elemental dmg)",
-    "Battle axe (d6/1h, d8/2h, +1 piercing)"
-  ],
-  heavyMelee: [
-    "Staff (d10, bulky, +1 armor)",
-    "Great sword (d10, bulky, +1 dmg)",
-    "Double axe (d10, bulky, +1 piercing)",
-    "Maul (d10, bulky, stun disadvantage)",
-    "Morningstar (d10, bulky, +1 dmg adjacent)",
-    "Poleaxe (d10, bulky, +1 piercing)"
-  ],
-  ranged: [
-    "Bow (d6, bulky)",
-    "Recurve bow (d6, bulky, exploding)",
-    "Crossbow (d8, bulky)",
-    "Heavy crossbow (d10, bulky, shoot or run)",
-    "Wand (d6, one hand, elemental)",
-    "Rod (d8, +1 summon dmg)"
-  ],
-  thrown: [
-    "Light spear (d6, thrown)",
-    "Throwing axe (d6, thrown)",
-    "Throwing knife (d6, thrown)"
-  ]
-};
-
-// --- Other tables ---
-const armorTable = [
-  "Coat (1 armor)",
-  "Vestment (1 energy shield)",
-  "Brigandine (2 armor)",
-  "Robe (2 energy shield)",
-  "Garb (1 armor + 1 energy shield)",
-  "Garb (1 armor + 1 energy shield)",
-  "Chainmail (2 armor + 1 energy shield)",
-  "Raiment (1 armor + 2 energy shield)"
-];
-
-const shieldTable = [
-  "Armor +1",
-  "Armor +1",
-  "Armor +1",
-  "Armor +1, Block",
-  "Armor +1, Block",
-  "Armor +1, Block",
-  "Armor +1, Energy Shield +1",
-  "Armor +1, Energy Shield +1, Block"
-];
-
-const offhandTable = [
-  "Spirit Shield +1",
-  "Spirit Shield +1",
-  "Spirit Shield +1",
-  "Spirit Shield +1, +Trait",
-  "Spirit Shield +1, +Trait",
-  "Spirit Shield +1, +Socket",
-  "Spirit Shield +1, +Socket",
-  "Spirit Shield +1, +Trait, +Socket"
-];
-
-const headTable = [
-  "Armor +1",
-  "Armor +1",
-  "Armor +1, +Trait",
-  "Spirit Shield +1",
-  "Spirit Shield +1",
-  "Spirit Shield +1, +Trait",
-  "Armor +1, Spirit Shield +1",
-  "Armor +1, Spirit Shield +1"
-];
-
-const jewelleryTable = [
-  "Trait",
-  "Trait",
-  "Trait",
-  "Socket",
-  "Socket",
-  "Socket",
-  "Trait, Socket",
-  "Trait, Socket"
-];
-
-const treasureTable = [
-  "Trinket / " + rollDice("1d6") + " coins",
-  rollDice("1d4") + " trinkets / " + rollDice("1d8") + " coins",
-  rollDice("1d6") + " trinkets / " + rollDice("2d6") + " coins",
-  rollDice("2d4") + " trinkets / " + rollDice("2d8") + " coins",
-  "Scroll",
-  "Add socket",
-  "Reroll trait",
-  "Improve rarity"
-];
-
-// --- Main generator ---
 function generateLoot() {
-  const typeRoll = roll(8);
-  let output = `You rolled a ${typeRoll}\n`;
+  let output = "";
+  const types = ["Weapon", "Shield", "Off-hand", "Armor", "Head", "Jewellery", "Treasure"];
+  const type = types[rollDie(types.length) - 1];
+  output += `Type: ${type}\n`;
 
-  switch (typeRoll) {
-    case 1: { // Weapon
-      output += "Type: Weapon\n";
-      const rarityW = rollRarity();
-      output += `Rarity: ${rarityW.rarity}\n`;
-      const weaponTypeRoll = roll(6);
-      let weaponList;
-      if (weaponTypeRoll === 1) weaponList = weaponTables.lightMelee;
-      else if (weaponTypeRoll === 2) weaponList = weaponTables.mediumMelee;
-      else if (weaponTypeRoll === 3) weaponList = weaponTables.heavyMelee;
-      else if (weaponTypeRoll === 4) weaponList = weaponTables.ranged;
-      else weaponList = weaponTables.thrown;
-      const weapon = weaponList[roll(weaponList.length)-1];
-      output += `Weapon: ${weapon}\n`;
-      break;
-    }
+  // rarity
+  let rarityRoll = rollDie(8);
+  let rarity = "Common";
+  let traits = 0;
+  if (rarityRoll >= 6 && rarityRoll <= 7) {
+    rarity = "Rare";
+    traits = 1;
+  } else if (rarityRoll === 8) {
+    rarity = "Epic";
+    traits = 2;
+  }
+  if (type !== "Treasure") {
+    output += `Rarity: ${rarity}\n`;
+  }
 
-    case 2: { // Shield
-      output += "Type: Shield\n";
-      const rarityS = rollRarity();
-      output += `Rarity: ${rarityS.rarity}\n`;
-      output += `Result: ${shieldTable[roll(8)-1]}\n`;
-      break;
+  // sockets (for equipment except Jewellery & Treasure)
+  if (["Weapon", "Shield", "Off-hand", "Armor", "Head"].includes(type)) {
+    let sockets = rollDie(3) - 1; // 0–2 sockets
+    output += `Sockets: ${sockets}\n`;
+  }
+
+  // weapon subtype
+  if (type === "Weapon") {
+    let weaponRoll = rollDie(6);
+    let weaponType;
+    switch (weaponRoll) {
+      case 1: weaponType = "Light Melee"; break;
+      case 2: weaponType = "Medium Melee"; break;
+      case 3: weaponType = "Heavy Melee"; break;
+      case 4: weaponType = "Ranged"; break;
+      case 5: weaponType = "Thrown (1d4)"; break;
+      case 6: weaponType = "Ammo (1d4)"; break;
     }
+    output += `Subtype: ${weaponType}\n`;
+    if (weaponType.includes("1d4")) {
+      let extra = rollDie(4);
+      output += `Rolled: ${extra}\n`;
+    }
+  }
+
+  // shields
+  if (type === "Shield") {
+    let r = rollDie(8);
+    if (r <= 3) output += "Shield: Armor +1\n";
+    else if (r <= 6) output += "Shield: Armor +1, Block\n";
+    else if (r === 7) output += "Shield: Armor +1, Energy Shield +1\n";
+    else output += "Shield: Armor +1, Energy Shield +1, Block\n";
+  }
+
+  // off-hand
+  if (type === "Off-hand") {
+    let r = rollDie(8);
+    let desc = "Off-hand: Spirit Shield +1";
+    if (r >= 4 && r <= 5) desc += ", +Trait";
+    if (r >= 6 && r <= 7) desc += ", +Socket";
+    if (r === 8) desc += ", +Trait, +Socket";
+    output += desc + "\n";
+  }
+
+  // head
+  if (type === "Head") {
+    let r = rollDie(8);
+    if (r <= 2) output += "Head: Armor +1\n";
+    else if (r === 3) output += "Head: Armor +1, +Trait\n";
+    else if (r <= 5) output += "Head: Spirit Shield +1\n";
+    else if (r === 6) output += "Head: Spirit Shield +1, +Trait\n";
+    else output += "Head: Armor +1, Spirit Shield +1\n";
+  }
+
+  // jewellery
+  if (type === "Jewellery") {
+    let r = rollDie(8);
+    if (r === 1) output += "Jewellery: 1 Trait\n";
+    else if (r === 2) output += "Jewellery: 2 Traits\n";
+    else if (r === 3) output += "Jewellery: 3 Traits\n";
+    else if (r >= 4 && r <= 6) output += "Jewellery: Socket\n";
+    else if (r === 7) output += "Jewellery: Trait + Socket\n";
+    else if (r === 8) output += "Jewellery: Trait + Socket\n";
+  }
+
+  // treasure
+  if (type === "Treasure") {
+    let r = rollDie(8);
+    if (r === 1) {
+      let coins = rollDie(6);
+      output += `Treasure: Trinket + ${coins} coins\n`;
+    } else if (r === 2) {
+      let trinkets = rollDie(4);
+      let coins = rollDie(8);
+      output += `Treasure: ${trinkets} trinkets + ${coins} coins\n`;
+    } else if (r === 3) {
+      let trinkets = rollDie(6);
+      let coins = rollDice(2,6);
+      output += `Treasure: ${trinkets} trinkets + ${coins.total} coins (rolled ${coins.rolls})\n`;
+    } else if (r === 4) {
+      let trinkets = rollDice(2,4);
+      let coins = rollDice(2,8);
+      output += `Treasure: ${trinkets.total} trinkets (rolled ${trinkets.rolls}) + ${coins.total} coins (rolled ${coins.rolls})\n`;
+    } else if (r === 5) {
+      output += "Treasure: Scroll\n";
+    } else if (r === 6) {
+      output += "Treasure: Add Socket\n";
+    } else if (r === 7) {
+      output += "Treasure: Reroll Trait\n";
+    } else if (r === 8) {
+      output += "Treasure: Improve Rarity\n";
+    }
+  }
+
+  // add traits count
+  if (traits > 0) {
+    output += `Traits: ${traits}\n`;
+  }
+
+  document.getElementById("output").innerText = output;
+}
