@@ -1,53 +1,58 @@
-:root{
-  --bg:#111216;
-  --card:#1f2226;
-  --muted:#bfc4c8;
-  --accent:#6ea3ff;
+body {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+  font-family: 'Courier New', Courier, monospace;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{
-  font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;
-  background:linear-gradient(180deg,var(--bg),#0b0c0d);
-  color:var(--muted);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
+.container {
+  max-width: 600px;
+  width: 100%;
+  background-color: #2a2a2a;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.7);
 }
 
-.container{
-  width:100%;
-  max-width:720px;
-  background:var(--card);
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 8px 30px rgba(2,6,23,0.6);
+h1 {
+  text-align: center;
+  color: #ffd700;
 }
 
-h1{margin:0 0 14px 0; color:white; font-size:20px}
-.controls{display:flex; gap:10px; margin-bottom:14px}
-button{
-  background:transparent;
-  color:var(--muted);
-  border:1px solid rgba(255,255,255,0.06);
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
-  transition:all .12s;
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
-button:hover{transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,0,0,0.4)}
-#output{
-  background:rgba(0,0,0,0.35);
-  border-radius:8px;
-  padding:14px;
-  min-height:140px;
-  overflow:auto;
-  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-  font-size:14px;
-  color:#e6eef8;
-  border:1px solid rgba(255,255,255,0.03);
+
+button {
+  padding: 0.5rem 1rem;
+  background-color: #444;
+  color: #f0f0f0;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
 }
-pre{white-space:pre-wrap; margin:0}
-footer{margin-top:12px; font-size:12px; color:#9aa3b2}
+
+button:hover {
+  background-color: #666;
+}
+
+#output pre {
+  background-color: #222;
+  padding: 1rem;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Socket circles */
+.sockets {
+  color: #ff4500;
+  font-weight: bold;
+}
