@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TTRPG Character Sheet & Loot Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>My TTRPG Tool</h1>
+
+  <!-- Character Sheet -->
+  <section id="character">
+    <h2>Character Sheet</h2>
+    <label>Name: <input id="char-name" type="text" placeholder="Enter name"></label><br>
+    <label>Strength: <input id="char-str" type="number" value="10"></label><br>
+    <label>Dexterity: <input id="char-dex" type="number" value="10"></label><br>
+    <label>Willpower: <input id="char-will" type="number" value="10"></label><br>
+    <button onclick="saveCharacter()">Save Character</button>
+    <p id="char-output"></p>
+  </section>
+
+  <!-- Loot Generator -->
+  <section id="loot">
+    <h2>Loot Generator</h2>
+    <button onclick="generateLoot()">Get Random Loot</button>
+    <p id="loot-output"></p>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
