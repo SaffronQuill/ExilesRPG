@@ -43,15 +43,16 @@ button:hover {
   background-color: #666;
 }
 
-#output pre {
+#output {
   background-color: #222;
   padding: 1rem;
   border-radius: 5px;
   white-space: pre-wrap;
   word-wrap: break-word;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-/* Socket circles */
 .sockets {
   color: #ff4500;
   font-weight: bold;
