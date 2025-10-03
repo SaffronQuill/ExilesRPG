@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loot Generator</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TTRPG Loot Generator</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Loot Generator</h1>
-    <button onclick="generateLoot()">Generate Loot</button>
-    <div id="output"></div>
+    <h1>TTRPG Loot Generator</h1>
+
+    <div class="controls">
+      <button id="generate-btn">Generate Loot</button>
+      <button id="clear-btn">Clear</button>
+    </div>
+
+    <div id="output" aria-live="polite"><pre></pre></div>
+
+    <footer>
+      <small>Rolls use standard random; save this folder to GitHub Pages to host.</small>
+    </footer>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
