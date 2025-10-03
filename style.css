@@ -1,36 +1,41 @@
 body {
   font-family: Arial, sans-serif;
-  padding: 2em;
-  background: #f9f9f9;
-  color: #222;
+  background-color: #222;
+  color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
 }
 
-h1 {
-  margin-bottom: 1em;
+.container {
+  text-align: center;
+  background: #333;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px #000;
+  max-width: 600px;
 }
 
 button {
-  padding: 0.5em 1em;
+  padding: 10px 20px;
   font-size: 16px;
+  margin-bottom: 20px;
   cursor: pointer;
-  border: 1px solid #888;
-  border-radius: 4px;
-  background: #eee;
+  border: none;
+  border-radius: 8px;
+  background: #555;
+  color: white;
 }
 
 button:hover {
-  background: #ddd;
+  background: #777;
 }
 
-#loot-output {
-  margin-top: 1em;
-  padding: 1em;
-  background: #fff;
-  border: 1px solid #ccc;
-  min-height: 100px;
-}
-
-pre {
-  white-space: pre-wrap;
-  margin: 0;
+#output {
+  font-size: 18px;
+  margin-top: 15px;
+  white-space: pre-line;
+  text-align: left;
 }
