@@ -1,139 +1,163 @@
-// --- Utility ---
-function rollDie(sides) {
-  return Math.floor(Math.random() * sides) + 1;
+// --- Utility functions ---
+function roll(n) {
+  return Math.floor(Math.random() * n) + 1;
 }
 
-// --- Main type table (d8) ---
-const typeTable = {
-  1: "Weapon",
-  2: "Shield",
-  3: "Off-hand",
-  4: "Armor",
-  5: "Head",
-  6: "Jewellery",
-  7: "Potion",
-  8: "Treasure"
-};
-
-// --- Rarity (d8 based) ---
-function rollRarity() {
-  const r = rollDie(8);
-  if (r <= 5) return { name: "Common", traits: 0 };
-  if (r <= 7) return { name: "Rare", traits: 1 };
-  return { name: "Epic", traits: 2 };
-}
-
-// --- Example traits pool ---
-const traits = [
-  "Glows faintly in the dark",
-  "Whispers in forgotten tongues",
-  "Lighter than it should be",
-  "Unnaturally sharp",
-  "Warm to the touch",
-  "Etched with runes",
-  "Made of strange metal",
-  "Hungry for blood"
-];
-
-function rollTraits(count) {
-  let results = [];
+function rollDice(expr) {
+  const match = expr.match(/(\d+)d(\d+)/);
+  if (!match) return expr;
+  let [ , count, sides ] = match;
+  count = parseInt(count); sides = parseInt(sides);
+  let total = 0, rolls = [];
   for (let i = 0; i < count; i++) {
-    const trait = traits[rollDie(traits.length) - 1];
-    results.push(trait);
+    const r = Math.floor(Math.random() * sides) + 1;
+    rolls.push(r); total += r;
   }
-  return results;
+  return `${expr} → [${rolls.join(", ")}] = ${total}`;
 }
 
-// --- Weapon subtypes with examples ---
-const weaponSubtypes = {
-  "Light Melee": [
-    {name: "Dagger", note: "Exploding", dmg: "d6"},
-    {name: "Claw", note: "Regain 1 STR", dmg: "d6"},
-    {name: "Sabre", note: "+1 dmg", dmg: "d6"},
-    {name: "Hatchet", note: "+1 piercing", dmg: "d6"},
-    {name: "Club", note: "Stun disadvantage", dmg: "d6"},
-    {name: "Rapier", note: "Exploding", dmg: "d6"}
+// --- Rarity system ---
+function rollRarity() {
+  const r = roll(8);
+  if (r <= 5) return { rarity: "Common", traits: 0 };
+  if (r <= 7) return { rarity: "Rare", traits: 1 };
+  return { rarity: "Epic", traits: 2 };
+}
+
+// --- Weapon tables ---
+const weaponTables = {
+  lightMelee: [
+    "Dagger (d6, exploding)",
+    "Claw (d6, regain 1 STR)",
+    "Sabre (d6, +1 dmg)",
+    "Hatchet (d6, +1 piercing)",
+    "Club (d6, stun disadvantage)",
+    "Rapier (d6, exploding)"
   ],
-  "Medium Melee": [
-    {name: "Long sword", note: "+1 dmg", dmg: "d6 (1h) / d8 (2h)"},
-    {name: "Spear", note: "Reach", dmg: "d6 (1h) / d8 (2h)"},
-    {name: "War hammer", note: "Stun disadvantage", dmg: "d6 (1h) / d8 (2h)"},
-    {name: "Mace", note: "+1 dmg adjacent", dmg: "d6 (1h) / d8 (2h)"},
-    {name: "Scepter", note: "+1 elemental dmg", dmg: "d6 (1h) / d8 (2h)"},
-    {name: "Battle axe", note: "+1 piercing", dmg: "d6 (1h) / d8 (2h)"}
+  mediumMelee: [
+    "Long sword (d6/1h, d8/2h, +1 dmg)",
+    "Spear (d6/1h, d8/2h, reach)",
+    "War hammer (d6/1h, d8/2h, stun disadvantage)",
+    "Mace (d6/1h, d8/2h, +1 dmg adjacent)",
+    "Scepter (d6/1h, d8/2h, +1 elemental dmg)",
+    "Battle axe (d6/1h, d8/2h, +1 piercing)"
   ],
-  "Heavy Melee": [
-    {name: "Staff", note: "+1 armor", dmg: "d10"},
-    {name: "Great sword", note: "+1 dmg", dmg: "d10"},
-    {name: "Double axe", note: "+1 piercing", dmg: "d10"},
-    {name: "Maul", note: "Stun disadvantage", dmg: "d10"},
-    {name: "Morningstar", note: "+1 dmg adjacent", dmg: "d10"},
-    {name: "Poleaxe", note: "+1 piercing", dmg: "d10"}
+  heavyMelee: [
+    "Staff (d10, bulky, +1 armor)",
+    "Great sword (d10, bulky, +1 dmg)",
+    "Double axe (d10, bulky, +1 piercing)",
+    "Maul (d10, bulky, stun disadvantage)",
+    "Morningstar (d10, bulky, +1 dmg adjacent)",
+    "Poleaxe (d10, bulky, +1 piercing)"
   ],
-  "Ranged": [
-    {name: "Bow", note: "", dmg: "d6"},
-    {name: "Recurve bow", note: "Exploding", dmg: "d6"},
-    {name: "Crossbow", note: "", dmg: "d8"},
-    {name: "Heavy crossbow", note: "Shoot or run", dmg: "d10"},
-    {name: "Wand", note: "One hand, elemental", dmg: "d6"},
-    {name: "Rod", note: "+1 summon dmg", dmg: "d8"}
+  ranged: [
+    "Bow (d6, bulky)",
+    "Recurve bow (d6, bulky, exploding)",
+    "Crossbow (d8, bulky)",
+    "Heavy crossbow (d10, bulky, shoot or run)",
+    "Wand (d6, one hand, elemental)",
+    "Rod (d8, +1 summon dmg)"
   ],
-  "Thrown": [
-    {name: "Light spear", note: "", dmg: "d6"},
-    {name: "Throwing axe", note: "", dmg: "d6"},
-    {name: "Throwing knife", note: "", dmg: "d6"}
+  thrown: [
+    "Light spear (d6, thrown)",
+    "Throwing axe (d6, thrown)",
+    "Throwing knife (d6, thrown)"
   ]
 };
 
-// --- Armor table ---
+// --- Other tables ---
 const armorTable = [
-  {name: "Coat", defense: "1 armor"},
-  {name: "Vestment", defense: "1 energy shield"},
-  {name: "Brigandine", defense: "2 armor"},
-  {name: "Robe", defense: "2 energy shield"},
-  {name: "Garb", defense: "1 armor + 1 energy shield"},
-  {name: "Garb", defense: "1 armor + 1 energy shield"},
-  {name: "Chainmail", defense: "2 armor + 1 energy shield"},
-  {name: "Raiment", defense: "1 armor + 2 energy shield"}
+  "Coat (1 armor)",
+  "Vestment (1 energy shield)",
+  "Brigandine (2 armor)",
+  "Robe (2 energy shield)",
+  "Garb (1 armor + 1 energy shield)",
+  "Garb (1 armor + 1 energy shield)",
+  "Chainmail (2 armor + 1 energy shield)",
+  "Raiment (1 armor + 2 energy shield)"
 ];
 
-// --- Main Loot Generator ---
+const shieldTable = [
+  "Armor +1",
+  "Armor +1",
+  "Armor +1",
+  "Armor +1, Block",
+  "Armor +1, Block",
+  "Armor +1, Block",
+  "Armor +1, Energy Shield +1",
+  "Armor +1, Energy Shield +1, Block"
+];
+
+const offhandTable = [
+  "Spirit Shield +1",
+  "Spirit Shield +1",
+  "Spirit Shield +1",
+  "Spirit Shield +1, +Trait",
+  "Spirit Shield +1, +Trait",
+  "Spirit Shield +1, +Socket",
+  "Spirit Shield +1, +Socket",
+  "Spirit Shield +1, +Trait, +Socket"
+];
+
+const headTable = [
+  "Armor +1",
+  "Armor +1",
+  "Armor +1, +Trait",
+  "Spirit Shield +1",
+  "Spirit Shield +1",
+  "Spirit Shield +1, +Trait",
+  "Armor +1, Spirit Shield +1",
+  "Armor +1, Spirit Shield +1"
+];
+
+const jewelleryTable = [
+  "Trait",
+  "Trait",
+  "Trait",
+  "Socket",
+  "Socket",
+  "Socket",
+  "Trait, Socket",
+  "Trait, Socket"
+];
+
+const treasureTable = [
+  "Trinket / " + rollDice("1d6") + " coins",
+  rollDice("1d4") + " trinkets / " + rollDice("1d8") + " coins",
+  rollDice("1d6") + " trinkets / " + rollDice("2d6") + " coins",
+  rollDice("2d4") + " trinkets / " + rollDice("2d8") + " coins",
+  "Scroll",
+  "Add socket",
+  "Reroll trait",
+  "Improve rarity"
+];
+
+// --- Main generator ---
 function generateLoot() {
-  const typeRoll = rollDie(8);
-  const type = typeTable[typeRoll];
-  let result = `Rolled Type (${typeRoll}): ${type}`;
+  const typeRoll = roll(8);
+  let output = `You rolled a ${typeRoll}\n`;
 
-  // Rarity & Traits
-  if (["Weapon","Shield","Off-hand","Armor","Head","Jewellery"].includes(type)) {
-    const rarity = rollRarity();
-    result += `\nRarity: ${rarity.name}`;
-    if (rarity.traits > 0) {
-      const itemTraits = rollTraits(rarity.traits);
-      result += `\nTraits: ${itemTraits.join("; ")}`;
+  switch (typeRoll) {
+    case 1: { // Weapon
+      output += "Type: Weapon\n";
+      const rarityW = rollRarity();
+      output += `Rarity: ${rarityW.rarity}\n`;
+      const weaponTypeRoll = roll(6);
+      let weaponList;
+      if (weaponTypeRoll === 1) weaponList = weaponTables.lightMelee;
+      else if (weaponTypeRoll === 2) weaponList = weaponTables.mediumMelee;
+      else if (weaponTypeRoll === 3) weaponList = weaponTables.heavyMelee;
+      else if (weaponTypeRoll === 4) weaponList = weaponTables.ranged;
+      else weaponList = weaponTables.thrown;
+      const weapon = weaponList[roll(weaponList.length)-1];
+      output += `Weapon: ${weapon}\n`;
+      break;
     }
-  }
 
-  // Sockets
-  if (["Weapon","Shield","Off-hand","Armor","Head"].includes(type)) {
-    const sockets = rollDie(3) - 1; // 0–2
-    result += `\nSockets: ${sockets}`;
-  }
-
-  // Weapon subtype + item
-  if (type === "Weapon") {
-    const subtypeNames = ["Light Melee","Medium Melee","Heavy Melee","Ranged","Thrown"];
-    const subtype = subtypeNames[rollDie(subtypeNames.length)-1];
-    const item = weaponSubtypes[subtype][rollDie(weaponSubtypes[subtype].length)-1];
-
-    result += `\nSubtype: ${subtype}`;
-    result += `\nItem: ${item.name} (Damage: ${item.dmg}${item.note ? ", " + item.note : ""})`;
-  }
-
-  // Armor items
-  if (type === "Armor") {
-    const item = armorTable[rollDie(armorTable.length)-1];
-    result += `\nItem: ${item.name} (${item.defense})`;
-  }
-
-  document.getElementById("loot-output").textContent = result;
-}
+    case 2: { // Shield
+      output += "Type: Shield\n";
+      const rarityS = rollRarity();
+      output += `Rarity: ${rarityS.rarity}\n`;
+      output += `Result: ${shieldTable[roll(8)-1]}\n`;
+      break;
+    }
