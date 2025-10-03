@@ -58,7 +58,6 @@ function generateLoot() {
       output += `Rolled: ${extra}\n`;
     }
   }
-
   // shields
   if (type === "Shield") {
     let r = rollDie(8);
