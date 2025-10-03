@@ -2,7 +2,7 @@ body {
   font-family: sans-serif;
   background: #f4f4f4;
   padding: 20px;
-  max-width: 600px;
+  max-width: 700px;
   margin: auto;
 }
 
@@ -16,11 +16,13 @@ section {
 
 button {
   margin-top: 10px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   font-size: 1rem;
+  cursor: pointer;
 }
 
 #loot-output {
   margin-top: 15px;
   font-weight: bold;
+  white-space: pre-line; /* keeps line breaks */
 }
