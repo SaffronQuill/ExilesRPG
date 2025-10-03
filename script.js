@@ -27,6 +27,15 @@ function pickRandomUnique(arr, count){
   return out;
 }
 
+// Replace placeholders [element] and [Attribute]
+function applyPlaceholders(trait){
+  const elements = ["Fire","Cold","Lightning"];
+  const attributes = ["STR","DEX","WIL"];
+  return trait
+    .replace(/\[element\]/g, elements[rollDie(elements.length)-1])
+    .replace(/\[Attribute\]/g, attributes[rollDie(attributes.length)-1]);
+}
+
 // ---------- Data pools ----------
 const weapons = {
   "Light Melee": [
@@ -54,10 +63,10 @@ const weapons = {
     {name:"Poleaxe", note:"+1 piercing", dmg:"d10 (bulky)"}
   ],
   "Ranged": [
-    {name:"Bow", note:"", dmg:"d6 (varied, bulky)"},
-    {name:"Recurve bow", note:"Exploding", dmg:"d6 (varied, bulky)"},
-    {name:"Crossbow", note:"", dmg:"d8 (varied, bulky)"},
-    {name:"Heavy crossbow", note:"Shoot or run", dmg:"d10 (varied, bulky)"},
+    {name:"Bow", note:"", dmg:"d6"},
+    {name:"Recurve bow", note:"Exploding", dmg:"d6"},
+    {name:"Crossbow", note:"", dmg:"d8"},
+    {name:"Heavy crossbow", note:"Shoot or run", dmg:"d10"},
     {name:"Wand", note:"One hand, elemental", dmg:"d6"},
     {name:"Rod", note:"+1 summon dmg", dmg:"d8"}
   ],
@@ -82,6 +91,7 @@ const armorTable = [
   "Raiment (1 armor + 2 energy shield)"
 ];
 
+// ---------- Trait tables ----------
 const weaponTraits = [
   "+damage",
   "+elemental damage",
@@ -130,7 +140,7 @@ const jewelleryTraits = [
 function shieldOutcomeFromRoll(r){ if(r<=3)return "Armor +1"; if(r<=6)return "Armor +1, Block"; if(r===7)return "Armor +1, Energy Shield +1"; return "Armor +1, Energy Shield +1, Block"; }
 function offhandOutcomeFromRoll(r){ if(r<=3)return "Spirit Shield +1"; if(r<=5)return "Spirit Shield +1, +Trait"; if(r<=7)return "Spirit Shield +1, +Socket"; return "Spirit Shield +1, +Trait, +Socket"; }
 function headOutcomeFromRoll(r){ if(r<=2)return "Armor +1"; if(r===3)return "Armor +1, +Trait"; if(r<=5)return "Spirit Shield +1"; if(r===6)return "Spirit Shield +1, +Trait"; return "Armor +1, Spirit Shield +1"; }
-function jewelleryOutcomeFromRoll(r){ if(r<=5)return "Ring"; return "Amulet"; }
+function jewelleryOutcomeFromRoll(r){ return r<=5 ? "Ring" : "Amulet"; }
 
 function treasureOutcomeFromRoll(r){
   switch(r){
@@ -174,7 +184,7 @@ function generateLoot(){
     out.push(`Sockets: ${sockets}`);
   }
 
-  // Type-specific
+  // --- Type-specific ---
   if(type==="Weapon"){
     const subtypeRoll=rollDie(6);
     const subtypeMap={1:"Light Melee",2:"Medium Melee",3:"Heavy Melee",4:"Ranged",5:"Thrown",6:"Ammo"};
@@ -183,23 +193,71 @@ function generateLoot(){
     const list = weapons[subtype] || [];
     const item = list[Math.floor(Math.random()*list.length)];
     if(item) out.push(`Item: ${item.name} — Damage: ${item.dmg}${item.note?` — ${item.note}`:""}`);
-    if(subtype==="Thrown"||subtype==="Ammo"){
-      const uses = rollDiceExpr("1d4");
-      out.push(`Uses roll: ${uses.text}`);
-    }
     if(rarity && rarity.traits>0){
-      const traits = pickRandomUnique(weaponTraits, rarity.traits);
+      const traits = pickRandomUnique(weaponTraits, rarity.traits).map(applyPlaceholders);
       out.push(`Weapon traits: ${traits.join(", ")}`);
     }
   }
 
-  if(type==="Shield"){ const r=rollDie(8); out.push(`Shield roll: ${r} → ${shieldOutcomeFromRoll(r)}`); if(rarity&&rarity.traits>0){const t=pickRandomUnique(armorTraits, rarity.traits); out.push(`Shield traits: ${t.join(", ")}`);} }
-  if(type==="Off-hand"){ const r=rollDie(8); const text=offhandOutcomeFromRoll(r); out.push(`Off-hand roll: ${r} → ${text}`); if(text.includes("+Trait") && rarity&&rarity.traits>0){const t=pickRandomUnique(offhandTraits, rarity.traits); out.push(`Off-hand traits: ${t.join(", ")}`);} if(text.includes("+Socket")) out.push(" - Added: +Socket"); }
-  if(type==="Armor"){ const idx=rollDie(armorTable.length)-1; out.push(`Armor roll: ${idx+1} → ${armorTable[idx]}`); if(rarity&&rarity.traits>0){const t=pickRandomUnique(armorTraits, rarity.traits); out.push(`Armor traits: ${t.join(", ")}`);} }
-  if(type==="Head"){ const r=rollDie(8); const text=headOutcomeFromRoll(r); out.push(`Head roll: ${r} → ${text}`); if(text.includes("+Trait") && rarity&&rarity.traits>0){const t=pickRandomUnique(armorTraits, rarity.traits); out.push(`Head traits: ${t.join(", ")}`);} }
-  if(type==="Jewellery"){ const r=rollDie(8); const subtype=jewelleryOutcomeFromRoll(r); out.push(`Jewellery roll: ${r} → ${subtype}`); if(rarity&&rarity.traits>0){const t=pickRandomUnique(jewelleryTraits, rarity.traits); out.push(`Jewellery traits: ${t.join(", ")}`);} }
-  if(type==="Potion"){ const simplePotions=["Minor Healing (restores HP)","Minor Mana (restores MP)","Antitoxin (cures poison)","Elixir of Swiftness (+movement)"]; const p=simplePotions[Math.floor(Math.random()*simplePotions.length)]; out.push(`Potion: ${p}`); }
-  if(type==="Treasure"){ const r=rollDie(8); out.push(`Treasure roll: ${r} → ${treasureOutcomeFromRoll(r)}`); }
+  if(type==="Shield"){ 
+    const r=rollDie(8); 
+    out.push(`Shield roll: ${r} → ${shieldOutcomeFromRoll(r)}`);
+    if(rarity&&rarity.traits>0){
+      const t=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders);
+      out.push(`Shield traits: ${t.join(", ")}`);
+    } 
+  }
+
+  if(type==="Off-hand"){ 
+    const r=rollDie(8); 
+    const text=offhandOutcomeFromRoll(r); 
+    out.push(`Off-hand roll: ${r} → ${text}`); 
+    if(text.includes("+Trait") && rarity&&rarity.traits>0){
+      const t=pickRandomUnique(offhandTraits, rarity.traits).map(applyPlaceholders);
+      out.push(`Off-hand traits: ${t.join(", ")}`);
+    }
+    if(text.includes("+Socket")) out.push(" - Added: +Socket"); 
+  }
+
+  if(type==="Armor"){ 
+    const idx=rollDie(armorTable.length)-1; 
+    out.push(`Armor roll: ${idx+1} → ${armorTable[idx]}`); 
+    if(rarity&&rarity.traits>0){
+      const t=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders);
+      out.push(`Armor traits: ${t.join(", ")}`);
+    } 
+  }
+
+  if(type==="Head"){ 
+    const r=rollDie(8); 
+    const text=headOutcomeFromRoll(r); 
+    out.push(`Head roll: ${r} → ${text}`); 
+    if(text.includes("+Trait") && rarity&&rarity.traits>0){
+      const t=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders);
+      out.push(`Head traits: ${t.join(", ")}`);
+    } 
+  }
+
+  if(type==="Jewellery"){ 
+    const r=rollDie(8); 
+    const subtype=jewelleryOutcomeFromRoll(r); 
+    out.push(`Jewellery roll: ${r} → ${subtype}`); 
+    if(rarity&&rarity.traits>0){
+      const t=pickRandomUnique(jewelleryTraits, rarity.traits).map(applyPlaceholders);
+      out.push(`Jewellery traits: ${t.join(", ")}`);
+    } 
+  }
+
+  if(type==="Potion"){ 
+    const simplePotions=["Minor Healing (restores HP)","Minor Mana (restores MP)","Antitoxin (cures poison)","Elixir of Swiftness (+movement)"]; 
+    const p=simplePotions[Math.floor(Math.random()*simplePotions.length)]; 
+    out.push(`Potion: ${p}`); 
+  }
+
+  if(type==="Treasure"){ 
+    const r=rollDie(8); 
+    out.push(`Treasure roll: ${r} → ${treasureOutcomeFromRoll(r)}`); 
+  }
 
   document.querySelector("#output pre").innerText=out.join("\n");
 }
