@@ -86,31 +86,84 @@ function generateLoot(){
   const type = typeMap[rollDie(8)];
   const rarity = ["Weapon","Shield","Off-hand","Armor","Head","Jewellery"].includes(type)? rollRarity(): null;
   let socketCount = ["Weapon","Shield","Off-hand","Armor","Head"].includes(type)? rollDie(3)-1:0;
-  let itemName="", traits=[];
+  let itemName="", traits=[], detailLine="";
 
   if(type==="Weapon"){
     const subMap={1:"Light Melee",2:"Medium Melee",3:"Heavy Melee",4:"Ranged",5:"Thrown",6:"Ammo"};
     const subtype = subMap[rollDie(6)];
     const arr = weapons[subtype];
     itemName = arr[rollDie(arr.length)-1];
+
+    switch(subtype){
+      case "Light Melee": detailLine="Damage: d6, 1 hand (dual wield: best of two dice)"; break;
+      case "Medium Melee": detailLine="Damage: d6 one hand / d8 both hands"; break;
+      case "Heavy Melee": detailLine="Damage: d10, bulky"; break;
+      case "Ranged": detailLine="Damage: varies, bulky"; break;
+      case "Thrown": detailLine="Damage: d6"; break;
+      case "Ammo": detailLine="Ammo pack"; break;
+    }
+
     if(rarity.traits>0) traits = pickRandomUnique(weaponTraits, rarity.traits).map(applyPlaceholders);
   }
-  if(type==="Shield"){ itemName=shieldOutcome(rollDie(8)); if(rarity.traits>0) traits=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders); }
-  if(type==="Off-hand"){ let t=offhandOutcome(rollDie(8)); itemName=t.replace("+Trait","").replace("+Socket",""); if(t.includes("+Trait") && rarity.traits>0) traits=pickRandomUnique(offhandTraits, rarity.traits).map(applyPlaceholders); if(t.includes("+Socket")) socketCount++; }
-  if(type==="Armor"){ itemName=armorTable[rollDie(armorTable.length)-1]; if(rarity.traits>0) traits=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders); }
-  if(type==="Head"){ let t=headOutcome(rollDie(8)); itemName=t.replace("+Trait",""); if(t.includes("+Trait") && rarity.traits>0) traits=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders); }
-  if(type==="Jewellery"){ itemName=jewelleryType(rollDie(8)); if(rarity.traits>0) traits=pickRandomUnique(jewelleryTraits, rarity.traits).map(applyPlaceholders); }
-  if(type==="Potion"){ const pots=["Minor Healing","Minor Mana","Antitoxin","Elixir of Swiftness"]; itemName=pots[rollDie(pots.length)-1]; }
-  if(type==="Treasure"){ itemName=treasureOutcome(rollDie(8)); }
+
+  if(type==="Shield"){ 
+    itemName=shieldOutcome(rollDie(8)); 
+    detailLine="Armor + Shield"; 
+    if(rarity.traits>0) traits=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders); 
+  }
+
+  if(type==="Off-hand"){ 
+    let t=offhandOutcome(rollDie(8)); 
+    itemName=t.replace("+Trait","").replace("+Socket",""); 
+    detailLine="Off-hand (Energy Shield + Armor)"; 
+    if(t.includes("+Trait") && rarity.traits>0) traits=pickRandomUnique(offhandTraits, rarity.traits).map(applyPlaceholders); 
+    if(t.includes("+Socket")) socketCount++; 
+  }
+
+  if(type==="Armor"){ 
+    itemName=armorTable[rollDie(armorTable.length)-1]; 
+    detailLine="Armor / Energy Shield"; 
+    if(rarity.traits>0) traits=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders); 
+  }
+
+  if(type==="Head"){ 
+    let t=headOutcome(rollDie(8)); 
+    itemName=t.replace("+Trait",""); 
+    detailLine="Headgear (Armor / Energy Shield)"; 
+    if(t.includes("+Trait") && rarity.traits>0) traits=pickRandomUnique(armorTraits, rarity.traits).map(applyPlaceholders); 
+  }
+
+  if(type==="Jewellery"){ 
+    itemName=jewelleryType(rollDie(8)); 
+    detailLine="Jewellery (Ring/Amulet)"; 
+    if(rarity.traits>0) traits=pickRandomUnique(jewelleryTraits, rarity.traits).map(applyPlaceholders); 
+  }
+
+  if(type==="Potion"){ 
+    const pots=["Minor Healing","Minor Mana","Antitoxin","Elixir of Swiftness"]; 
+    itemName=pots[rollDie(pots.length)-1]; 
+    detailLine="Potion"; 
+  }
+
+  if(type==="Treasure"){ 
+    itemName=treasureOutcome(rollDie(8)); 
+    detailLine="Treasure"; 
+  }
 
   const socketDisplay = socketCount>0? `<span class="sockets">${"●".repeat(socketCount)}</span>` : "";
   const color = rarity? rarity.color : "white";
-  const traitText = traits.length>0? "\nTraits:\n  - "+traits.join("\n  - ") : "";
 
+  // Create card div
   const container = document.getElementById("output");
   const div = document.createElement("div");
-  div.innerHTML = `<span style="color:${color}; font-weight:bold">${itemName}</span> ${socketDisplay}${traitText}`;
-  div.style.marginBottom="1rem";
+  div.classList.add("item-card");
+  let traitsHTML = traits.map(t=>`<div class="item-trait">${t}</div>`).join("");
+  div.innerHTML = `
+    <small>${type}</small>
+    <div class="item-name" style="color:${color}">${itemName} ${socketDisplay}</div>
+    <div class="item-detail">${detailLine}</div>
+    ${traitsHTML}
+  `;
   container.appendChild(div);
 }
 
