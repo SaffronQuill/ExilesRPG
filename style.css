@@ -8,12 +8,8 @@ body {
 }
 
 .container {
-  max-width: 600px;
+  max-width: 800px;
   width: 100%;
-  background-color: #2a2a2a;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.7);
 }
 
 h1 {
@@ -44,14 +40,53 @@ button:hover {
 }
 
 #output {
-  background-color: #222;
-  padding: 1rem;
-  border-radius: 5px;
-  max-height: 400px;
-  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Card style for items */
+.item-card {
+  width: 180px; /* ~3.5" @ 50px/inch */
+  height: 130px; /* ~2.5" */
+  background-color: #2a2a2a;
+  border: 2px solid #444;
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  box-shadow: 0 0 8px rgba(0,0,0,0.6);
+  overflow: hidden;
+}
+
+.item-card small {
+  font-size: 0.7em;
+  color: #ccc;
+}
+
+.item-name {
+  font-weight: bold;
+  margin: 0.2rem 0;
 }
 
 .sockets {
   color: #ff4500;
   font-weight: bold;
+  display: inline-block;
+  margin-left: 0.2rem;
+}
+
+.item-detail {
+  font-size: 0.85em;
+  margin: 0.2rem 0;
+}
+
+.item-trait {
+  font-size: 0.75em;
+  margin: 0.1rem 0;
+  line-height: 1em;
 }
